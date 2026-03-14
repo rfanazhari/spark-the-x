@@ -33,6 +33,8 @@ Each agent has a specific role, input, output, and set of tools it can use.
 
 **API Used**: `GET /api/twitter/trends`
 
+**Auth Requirement**: Active Supabase session required; route checks user session before fetching.
+
 **Rules**:
 - Filter out trends with `tweetVolume < 1000`
 - Sort by `tweetVolume` descending
@@ -69,6 +71,8 @@ Each agent has a specific role, input, output, and set of tools it can use.
 ```
 
 **API Used**: `POST /api/ai/generate`
+
+**Auth Requirement**: Active Supabase session required; route checks user session before generating.
 
 **Claude Prompt Template**:
 ```
@@ -115,6 +119,8 @@ Respond ONLY in JSON format.
 
 **API Used**: `POST /api/twitter/post`
 
+**Auth Requirement**: Active Supabase session required; route checks user session before posting.
+
 **Rules**:
 - Validate tweet length ≤ 280 chars before posting
 - If `scheduleAt` is provided, queue the post (Phase 2)
@@ -125,7 +131,7 @@ Respond ONLY in JSON format.
 
 ## Agent 4 — Profile Manager
 
-**Role**: Read and update the Twitter profile for `@rfanazhari`
+**Role**: Read and update the Twitter profile for the authenticated user
 
 **Trigger**: User visits `/dashboard/profile` or submits profile edit form
 
@@ -161,6 +167,8 @@ Respond ONLY in JSON format.
 - `GET /api/twitter/profile` → fetch
 - `PATCH /api/twitter/profile` → update
 
+**Auth Requirement**: Active Supabase session required; route checks user session and uses `getTwitterClient(userId)`.
+
 **Rules**:
 - Validate field lengths before sending to API
 - Show diff of what changed after successful update
@@ -173,6 +181,8 @@ Respond ONLY in JSON format.
 **Role**: Fully automated trend-to-post pipeline, runs on schedule
 
 **Trigger**: Cron job (e.g. every 6 hours)
+
+**Auth Requirement**: Active Supabase session required; only runs for users with valid setup.
 
 **Workflow**:
 ```
@@ -237,4 +247,4 @@ Dashboard (Next.js)
 
 ---
 
-*Last updated: March 14, 2026*
+*Last updated: March 15, 2026*

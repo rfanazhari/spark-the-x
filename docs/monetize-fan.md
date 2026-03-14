@@ -32,9 +32,26 @@
 - Full Next.js fullstack prompt generated (see below)
 - Tech stack: Next.js 14+, TypeScript, Tailwind CSS, shadcn/ui, twitter-api-v2
 
+### 5. SaaS Auth Flow (Phase B)
+- Magic Link login with Supabase Auth
+- Middleware protection for dashboard and setup flow
+- Landing page with CTA to /auth/login
+- Logout route with sidebar action
+
+### 6. Twitter Setup (Phase C)
+- `/setup` page with 3-step credential flow
+- Validate credentials via `/api/setup/validate`
+- Encrypt + save credentials via `/api/setup/save`
+
+### 7. SaaS Transformation (Phases A–D)
+- Supabase schema + RLS policies for multi-user isolation
+- Per-user encrypted Twitter credentials
+- `getTwitterClient(userId)` factory for API routes
+- Auth + setup checks across all protected routes
+
 ---
 
-## 🏗️ Current Phase — Phase 1: Core Features
+## 🏗️ Current Phase — Phase 2: Scheduling & Automation
 
 ### Tech Stack
 - **Framework**: Next.js 14+ (App Router)
@@ -43,19 +60,19 @@
 - **Twitter SDK**: twitter-api-v2 (npm)
 - **AI**: Claude API (claude-sonnet-4-20250514)
 
-### Features in This Phase
+### Phase 1 Features (Completed)
 | Feature | Route | Status |
 |---|---|---|
-| Manage Profile | `/dashboard/profile` | 🔨 In Progress |
-| Create Post | `/dashboard/post` | 🔨 In Progress |
-| Trending Topics | `/dashboard/trends` | 🔨 In Progress |
-| AI Post Generator | `/dashboard/generate` | 🔨 In Progress |
+| Manage Profile | `/dashboard/profile` | ✅ Done |
+| Create Post | `/dashboard/post` | ✅ Done |
+| Trending Topics | `/dashboard/trends` | ✅ Done |
+| AI Post Generator | `/dashboard/generate` | ✅ Done |
 
 ---
 
 ## 🗺️ Next Phases
 
-### Phase 2 — Scheduling & Automation
+### Phase 2 — Scheduling & Automation (Current)
 - [ ] Post scheduler (queue system)
 - [ ] Auto-post based on trending topics (cron job)
 - [ ] Bulk post queue management
@@ -188,4 +205,4 @@ See monetize-fan.md for full project documentation, next phases, and goals.
 
 ---
 
-*Last updated: March 14, 2026*
+*Last updated: March 15, 2026*

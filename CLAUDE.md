@@ -7,8 +7,8 @@
 
 ## Project Overview
 
-**monetize-fan** is a Next.js fullstack dashboard for automating and monetizing a Twitter/X account (`@rfanazhari`).
-It uses the official X API v2 to manage profiles, create posts, track trends, and generate AI-powered content.
+**monetize-fan** is a Next.js SaaS dashboard for automating and monetizing Twitter/X accounts.
+It supports multi-user onboarding with Supabase Auth, per-user encrypted credentials, and AI-powered content workflows.
 
 ---
 
@@ -20,7 +20,7 @@ It uses the official X API v2 to manage profiles, create posts, track trends, an
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS + shadcn/ui |
 | Twitter SDK | twitter-api-v2 |
-| AI | Claude API (`claude-sonnet-4-20250514`) |
+| AI | Claude API (`claude-sonnet-4-20250514`) + OpenAI GPT-4o Mini |
 | Runtime | Node.js 18+ |
 
 ---
@@ -57,14 +57,17 @@ monetize-fan/
 Always read from `.env.local`. Never expose to client-side code.
 
 ```
-TWITTER_CONSUMER_KEY=
-TWITTER_CONSUMER_SECRET=
-TWITTER_ACCESS_TOKEN=
-TWITTER_ACCESS_TOKEN_SECRET=
-TWITTER_BEARER_TOKEN=
-TWITTER_CLIENT_ID=
-TWITTER_CLIENT_SECRET=
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Encryption
+ENCRYPTION_KEY=
+
+# AI
 ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
 ```
 
 ---
@@ -80,16 +83,19 @@ ANTHROPIC_API_KEY=
 
 ### API Routes
 ```typescript
-// Standard API route pattern
+// Standard API route pattern (auth required)
 export async function GET() {
   try {
-    // logic here
+    const user = await getAuthUser()
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // logic here (use user.id)
     return NextResponse.json({ success: true, data: result })
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    )
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Server error'
+    return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }
 ```
@@ -97,8 +103,9 @@ export async function GET() {
 ### Twitter Client
 Always import from `@/lib/twitter`, never instantiate directly in route files:
 ```typescript
-import { rwClient } from '@/lib/twitter'
+import { getTwitterClient } from '@/lib/twitter'
 ```
+Use `getTwitterClient(userId)` for read/write and `getTwitterBearerClient(userId)` for bearer-only calls.
 
 ### Components
 - Use **shadcn/ui** components first before building custom ones
@@ -124,11 +131,11 @@ import { rwClient } from '@/lib/twitter'
 - **Rate limits** apply on pay-per-use — avoid unnecessary API calls
 - **Bearer Token** → read-only, app-level auth
 - **OAuth 1.0a** (Consumer Key + Access Token) → read/write on behalf of `@rfanazhari`
-- Trending topics endpoint: `rwClient.v1.trendsByPlace(woeid)`
+- Trending topics endpoint: `getTwitterClient(userId).v1.trendsByPlace(woeid)`
   - `woeid: 1` = Worldwide
   - `woeid: 23424846` = Indonesia
-- Profile update uses v1: `rwClient.v1.updateAccountProfile()`
-- Tweet posting uses v2: `rwClient.v2.tweet()`
+- Profile update uses v1: `client.v1.updateAccountProfile()`
+- Tweet posting uses v2: `client.v2.tweet()`
 
 ---
 
@@ -153,4 +160,4 @@ import { rwClient } from '@/lib/twitter'
 
 ---
 
-*Last updated: March 14, 2026*
+*Last updated: March 15, 2026*
