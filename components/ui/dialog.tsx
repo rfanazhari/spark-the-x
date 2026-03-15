@@ -120,7 +120,7 @@ function DialogDescription({
   children?: React.ReactNode
 }) {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement, {
+    return React.cloneElement(children as React.ReactElement<{ className?: string }>, {
       ...props,
       className: cn("text-sm text-muted-foreground", className, (children as any).props.className),
     })
