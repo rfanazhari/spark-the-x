@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['posted', 'partial'])
-      .order('posted_at', { ascending: false, nullsLast: true })
+      .order('posted_at', { ascending: false, nullsFirst: false })
 
     if (threadsError) throw threadsError
 
