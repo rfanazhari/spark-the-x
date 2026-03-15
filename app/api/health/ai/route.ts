@@ -277,7 +277,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const probe = searchParams.get('probe') !== 'false'
   const modelProbe = searchParams.get('modelProbe') !== 'false'
-  const anthropicModel = searchParams.get('anthropicModel') ?? 'claude-sonnet-4-20250514'
+  const anthropicModel = searchParams.get('anthropicModel') ?? 'claude-sonnet-4-6'
 
   if (!probe) {
     return NextResponse.json(

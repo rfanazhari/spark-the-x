@@ -65,7 +65,7 @@ async function callClaude(trend: string, tweetVolume: number, pillar: string): P
     apiKey: process.env.ANTHROPIC_API_KEY,
   })
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: buildUserPrompt(trend, tweetVolume, pillar) }],
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
         addAITrace({
           provider: 'anthropic',
           operation: 'generate',
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           ok: true,
           message: 'Content generation success',
           meta: { trend, pillar, requestedModel: model },
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
         addAITrace({
           provider: 'anthropic',
           operation: 'generate',
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           ok: false,
           status,
           requestId,
