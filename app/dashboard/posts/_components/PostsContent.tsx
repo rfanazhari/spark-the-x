@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -486,11 +487,9 @@ export function PostsContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialog.Close asChild>
-              <Button variant="outline" disabled={Boolean(deletingId)}>
-                Cancel
-              </Button>
-            </AlertDialog.Close>
+            <AlertDialogCancel disabled={Boolean(deletingId)}>
+              Cancel
+            </AlertDialogCancel>
             <Button
               variant="destructive"
               onClick={() => confirmTweetId && handleDelete(confirmTweetId)}
