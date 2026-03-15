@@ -42,12 +42,12 @@ type PublicMetrics = {
 type TimelineTweet = {
   id: string
   text: string
-  created_at?: string
+  createdAt?: string
   publicMetrics?: PublicMetrics
   entities?: unknown
   attachments?: unknown
   lang?: string
-  possibly_sensitive?: boolean
+  possiblySensitive?: boolean
   media?: TimelineMedia[]
 }
 
@@ -347,7 +347,7 @@ export function PostsContent() {
             const thumb = getThumbUrl(tweet.media)
             const lang = tweet.lang?.toUpperCase() ?? '—'
             const metrics = tweet.publicMetrics
-            const createdAt = tweet.created_at ? formatWib(tweet.created_at) : '—'
+            const createdAt = tweet.createdAt ? formatWib(tweet.createdAt) : '—'
             const viewUrl = `https://x.com/rfanazhari/status/${tweet.id}`
 
             return (
