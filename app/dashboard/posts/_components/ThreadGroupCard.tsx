@@ -76,9 +76,16 @@ export function ThreadGroupCard({
   return (
     <div className="rounded-xl border border-border bg-card space-y-0 overflow-hidden">
       {/* Header */}
-      <button
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-4 sm:px-5 sm:py-5 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors text-left"
+        className="w-full px-4 py-4 sm:px-5 sm:py-5 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors text-left cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            setIsExpanded(!isExpanded)
+          }
+        }}
       >
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
@@ -118,7 +125,7 @@ export function ThreadGroupCard({
             }`}
           />
         </div>
-      </button>
+      </div>
 
       {/* Collapsed body preview or expanded content */}
       {isExpanded ? (
