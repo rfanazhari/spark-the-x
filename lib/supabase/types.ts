@@ -22,3 +22,42 @@ export interface TwitterAccount {
   created_at: string
   updated_at: string
 }
+
+export interface Thread {
+  id: string
+  user_id: string
+  topic: string
+  model: 'claude' | 'openai'
+  total_tweets: number
+  status: 'draft' | 'posted' | 'partial' | 'failed'
+  first_tweet_id: string | null
+  first_tweet_url: string | null
+  created_at: string
+  posted_at: string | null
+}
+
+export interface ThreadTweet {
+  id: string
+  thread_id: string
+  user_id: string
+  index: number
+  type: 'hook' | 'body' | 'cta'
+  text: string
+  char_count: number
+  tweet_id: string | null
+  tweet_url: string | null
+  status: 'pending' | 'posted' | 'failed'
+  error: string | null
+  posted_at: string | null
+  created_at: string
+}
+
+export interface ThreadUsage {
+  id: string
+  user_id: string
+  month: string
+  thread_count: number
+  limit_count: number
+  created_at: string
+  updated_at: string
+}

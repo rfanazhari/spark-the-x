@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { ThreadGroupCard } from './ThreadGroupCard'
 
 type TimelineMedia = {
   media_key: string
@@ -42,7 +43,7 @@ type TimelineTweet = {
   id: string
   text: string
   created_at?: string
-  public_metrics?: PublicMetrics
+  publicMetrics?: PublicMetrics
   entities?: unknown
   attachments?: unknown
   lang?: string
@@ -50,13 +51,37 @@ type TimelineTweet = {
   media?: TimelineMedia[]
 }
 
-type PostsResponse = {
+type TimelineThreadTweet = {
+  index: number
+  text: string
+  type: 'hook' | 'body' | 'cta'
+  tweetId: string | null
+  tweetUrl: string | null
+  publicMetrics?: PublicMetrics
+}
+
+type TimelineThread = {
+  id: string
+  topic: string
+  model: string
+  totalTweets: number
+  status: string
+  firstTweetUrl: string | null
+  postedAt: string | null
+  tweets: TimelineThreadTweet[]
+}
+
+type TimelineItem =
+  | { type: 'post'; postedAt: string; tweet: TimelineTweet }
+  | { type: 'thread'; postedAt: string; thread: TimelineThread }
+
+type TimelineResponse = {
   success: true
-  data: TimelineTweet[]
+  data: TimelineItem[]
   meta: {
-    next_token: string | null
-    previous_token: string | null
-    result_count: number
+    nextToken: string | null
+    previousToken: string | null
+    resultCount: number
   }
 }
 
@@ -96,26 +121,53 @@ function fmtNumber(n: number): string {
 function PostsSkeletonGrid() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-card p-4 sm:p-5 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-4 w-11/12" />
-              <Skeleton className="h-4 w-10/12" />
-            </div>
-            <Skeleton className="h-16 w-16 rounded-lg" />
+      {Array.from({ length: 10 }).map((_, i) => {
+        // Alternate between post and thread skeletons
+        const isThread = i % 3 === 0
+        return (
+          <div key={i} className="rounded-xl border border-border bg-card p-4 sm:p-5 space-y-4">
+            {isThread ? (
+              <>
+                {/* Thread skeleton */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Skeleton className="h-5 w-14" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-9 w-9 rounded" />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Post skeleton */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-11/12" />
+                    <Skeleton className="h-4 w-10/12" />
+                  </div>
+                  <Skeleton className="h-16 w-16 rounded-lg" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-5 w-12" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-10 w-28 rounded-lg" />
+                  <Skeleton className="h-10 w-24 rounded-lg" />
+                </div>
+              </>
+            )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-5 w-12" />
-            <Skeleton className="h-5 w-12" />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-28 rounded-lg" />
-            <Skeleton className="h-10 w-24 rounded-lg" />
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -138,8 +190,8 @@ export function PostsContent() {
 
   const paginationToken = searchParams.get('pagination_token') ?? undefined
 
-  const [posts, setPosts] = useState<TimelineTweet[]>([])
-  const [meta, setMeta] = useState<PostsResponse['meta'] | null>(null)
+  const [items, setItems] = useState<TimelineItem[]>([])
+  const [meta, setMeta] = useState<TimelineResponse['meta'] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [totalCount, setTotalCount] = useState<number | null>(null)
@@ -159,8 +211,8 @@ export function PostsContent() {
     }
   }, [page])
 
-  const canPrev = page > 1 && (page === 2 || Boolean(meta?.previous_token) || Boolean(storedPrevToken))
-  const canNext = Boolean(meta?.next_token)
+  const canPrev = page > 1 && (page === 2 || Boolean(meta?.previousToken) || Boolean(storedPrevToken))
+  const canNext = Boolean(meta?.nextToken)
 
   const fetchProfileCount = useCallback(async () => {
     try {
@@ -181,26 +233,26 @@ export function PostsContent() {
     try {
       const qs = new URLSearchParams()
       if (paginationToken) qs.set('pagination_token', paginationToken)
-      const res = await fetch(`/api/twitter/posts?${qs.toString()}`)
-      const json = (await res.json()) as PostsResponse | ErrorResponse
+      const res = await fetch(`/api/posts/timeline?${qs.toString()}`)
+      const json = (await res.json()) as TimelineResponse | ErrorResponse
       if (json.success) {
-        setPosts(json.data)
+        setItems(json.data)
         setMeta(json.meta)
         try {
           if (paginationToken) sessionStorage.setItem(`posts:page:${page}`, paginationToken)
-          if (json.meta.next_token) {
-            sessionStorage.setItem(`posts:page:${page + 1}`, json.meta.next_token)
+          if (json.meta.nextToken) {
+            sessionStorage.setItem(`posts:page:${page + 1}`, json.meta.nextToken)
           }
         } catch {
           // ignore storage errors
         }
       } else {
-        setPosts([])
+        setItems([])
         setMeta(null)
         setError(json.error ?? 'Failed to fetch posts.')
       }
     } catch {
-      setPosts([])
+      setItems([])
       setMeta(null)
       setError('Network error. Please try again.')
     } finally {
@@ -262,7 +314,7 @@ export function PostsContent() {
 
       {loading ? (
         <PostsSkeletonGrid />
-      ) : posts.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="rounded-xl border border-border bg-card px-6 py-12 text-center mt-6">
           <ImageIcon size={34} className="mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm font-medium text-foreground">
@@ -274,10 +326,27 @@ export function PostsContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-          {posts.map((tweet) => {
+          {items.map((item) => {
+            if (item.type === 'thread') {
+              return (
+                <ThreadGroupCard
+                  key={item.thread.id}
+                  id={item.thread.id}
+                  topic={item.thread.topic}
+                  model={item.thread.model}
+                  totalTweets={item.thread.totalTweets}
+                  postedAt={item.thread.postedAt || item.postedAt}
+                  firstTweetUrl={item.thread.firstTweetUrl}
+                  tweets={item.thread.tweets}
+                />
+              )
+            }
+
+            // Render post
+            const tweet = item.tweet
             const thumb = getThumbUrl(tweet.media)
             const lang = tweet.lang?.toUpperCase() ?? '—'
-            const metrics = tweet.public_metrics
+            const metrics = tweet.publicMetrics
             const createdAt = tweet.created_at ? formatWib(tweet.created_at) : '—'
             const viewUrl = `https://x.com/rfanazhari/status/${tweet.id}`
 
@@ -289,11 +358,12 @@ export function PostsContent() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className="bg-blue-600 hover:bg-blue-700 text-white">Post</Badge>
                       <span className="text-xs text-muted-foreground">{createdAt}</span>
                       <Badge className="uppercase" variant="outline">
                         {lang}
                       </Badge>
-                      {tweet.possibly_sensitive ? (
+                      {tweet.possiblySensitive ? (
                         <Badge variant="destructive" className="gap-1">
                           <AlertTriangle size={12} />
                           Sensitive
@@ -380,13 +450,13 @@ export function PostsContent() {
         </div>
       )}
 
-      {!loading && posts.length > 0 ? (
+      {!loading && items.length > 0 ? (
         <div className="mt-8 flex items-center justify-center gap-3">
           <Button
             variant="outline"
             onClick={() => {
               if (!canPrev) return
-              const prevToken = page - 1 === 1 ? null : meta?.previous_token ?? storedPrevToken
+              const prevToken = page - 1 === 1 ? null : meta?.previousToken ?? storedPrevToken
               goToPage(page - 1, prevToken)
             }}
             disabled={!canPrev}
@@ -397,8 +467,8 @@ export function PostsContent() {
           <Button
             variant="outline"
             onClick={() => {
-              if (!meta?.next_token) return
-              goToPage(page + 1, meta.next_token)
+              if (!meta?.nextToken) return
+              goToPage(page + 1, meta.nextToken)
             }}
             disabled={!canNext}
           >

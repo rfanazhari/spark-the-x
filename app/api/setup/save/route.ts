@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { encrypt } from '@/lib/encryption'
+import { getTwitterClient } from '@/lib/twitter'
 
 type SavePayload = {
   consumerKey: string
@@ -98,6 +99,44 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Setup Save] Saved credentials', { userId: user.id })
+
+    // Fetch profile data from Twitter API and upsert to profiles table
+    try {
+      const twitterClient = await getTwitterClient(user.id)
+      const profileData = await twitterClient.v2.me({
+        'user.fields': ['profile_image_url', 'name'],
+      })
+
+      if (profileData.data) {
+        const { name, profile_image_url } = profileData.data
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: user.id,
+              full_name: name || twitterUsername,
+              avatar_url: profile_image_url || null,
+              updated_at: new Date().toISOString(),
+            },
+            {
+              onConflict: 'id',
+            }
+          )
+
+        if (profileError) {
+          console.warn('[Setup Save] Profile upsert warning:', profileError)
+        } else {
+          console.log('[Setup Save] Saved profile data', { userId: user.id })
+        }
+      }
+    } catch (profileFetchError: unknown) {
+      const msg =
+        profileFetchError instanceof Error ? profileFetchError.message : 'Unknown error'
+      console.warn('[Setup Save] Failed to fetch profile from Twitter API:', msg)
+      // Continue - profile enrichment is optional
+    }
+
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
     console.error('[Setup Save] Error:', error)

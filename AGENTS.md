@@ -201,6 +201,76 @@ Respond ONLY in JSON format.
 
 ---
 
+## Agent 6 — Thread Generator
+
+**Role**: Generate AI thread from topic and save to DB
+
+**Trigger**: User clicks Generate Thread on `/dashboard/thread`
+
+**Input**:
+```typescript
+{
+  topic: string
+  model: string
+  tweetVolume?: number
+  fromTrend?: boolean
+}
+```
+
+**Output**:
+```typescript
+{
+  threadId: string
+  tweets: string[]
+  totalTweets: number
+  usage: {
+    threadCount: number
+    limitCount: number
+    remaining: number
+  }
+}
+```
+
+**Rules**:
+- Check usage limit before generating
+- Increment usage only on success
+- Recalculate numbering server-side
+- Validate all tweets ≤ 280 chars before saving
+
+---
+
+## Agent 7 — Thread Publisher
+
+**Role**: Post thread as reply chain to X and update DB
+
+**Trigger**: User clicks Post Thread after preview
+
+**Input**:
+```typescript
+{
+  threadId: string
+  tweets: string[]
+}
+```
+
+**Output**:
+```typescript
+{
+  status: string
+  totalPosted: number
+  firstTweetUrl: string | null
+  tweets: string[]
+}
+```
+
+**Rules**:
+- 500ms delay between each tweet post
+- Update DB status per tweet as posting progresses
+- Handle partial failure gracefully
+- Never retry automatically — let user decide
+
+---
+
 ## Shared Rules (All Agents)
 
 - **Never expose API keys** in logs, responses, or client-side code

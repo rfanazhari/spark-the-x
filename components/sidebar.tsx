@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import {
   User,
   PenLine,
+  AlignLeft,
   FileText,
   TrendingUp,
   Sparkles,
@@ -13,12 +14,15 @@ import {
   X,
   Zap,
   LogOut,
+  LayoutDashboard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/profile', label: 'Profile', icon: User },
   { href: '/dashboard/post', label: 'Post', icon: PenLine },
+  { href: '/dashboard/thread', label: 'Thread', icon: AlignLeft },
   { href: '/dashboard/posts', label: 'Posts', icon: FileText },
   { href: '/dashboard/trends', label: 'Trends', icon: TrendingUp },
   { href: '/dashboard/generate', label: 'Generate', icon: Sparkles },
@@ -137,7 +141,7 @@ export function Sidebar({ userEmail }: { userEmail?: string | null }) {
 
 function Logo() {
   return (
-    <Link href="/dashboard/profile" className="flex items-center gap-2">
+    <Link href="/dashboard" className="flex items-center gap-2">
       <div className="flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary">
         <Zap size={14} className="text-sidebar-primary-foreground" />
       </div>

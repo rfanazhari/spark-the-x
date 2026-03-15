@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -60,13 +60,13 @@ export async function middleware(request: NextRequest) {
       .maybeSingle()
 
     if (twitterAccount) {
-      return NextResponse.redirect(new URL('/dashboard/profile', request.url))
+      return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
 
   // Logged in + accessing /auth/login -> redirect to dashboard
   if (user && pathname === '/auth/login') {
-    return NextResponse.redirect(new URL('/dashboard/profile', request.url))
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return supabaseResponse

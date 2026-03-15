@@ -33,15 +33,20 @@ monetize-fan/
 │   ├── dashboard/
 │   │   ├── profile/page.tsx       # Manage Twitter profile
 │   │   ├── post/page.tsx          # Create & schedule posts
+│   │   ├── thread/page.tsx        # AI Thread Creator
 │   │   ├── trends/page.tsx        # View trending topics
 │   │   └── generate/page.tsx      # AI post generator
 │   └── api/
 │       ├── twitter/
 │       │   ├── profile/route.ts   # GET & PATCH profile
 │       │   ├── post/route.ts      # POST tweet
+│       │   ├── thread/route.ts    # POST thread
 │       │   └── trends/route.ts    # GET trends
-│       └── ai/
-│           └── generate/route.ts  # AI content generation
+│       ├── ai/
+│           ├── generate/route.ts  # AI content generation
+│           └── thread/route.ts    # AI thread generation
+│       └── thread/
+│           └── usage/route.ts     # GET thread usage + quota
 ├── lib/
 │   └── twitter.ts                 # Twitter client singleton
 ├── components/                    # Shared UI components
@@ -123,6 +128,9 @@ Use `getTwitterClient(userId)` for read/write and `getTwitterBearerClient(userId
 | POST | `/api/twitter/post` | Create a tweet |
 | GET | `/api/twitter/trends` | Get trending topics |
 | POST | `/api/ai/generate` | Generate tweet options via Claude |
+| GET | `/api/thread/usage` | Fetch monthly thread usage + quota |
+| POST | `/api/ai/thread` | Generate thread via AI |
+| POST | `/api/twitter/thread` | Post thread as reply chain |
 
 ---
 

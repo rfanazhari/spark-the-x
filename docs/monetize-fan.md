@@ -65,6 +65,7 @@
 |---|---|---|
 | Manage Profile | `/dashboard/profile` | ✅ Done |
 | Create Post | `/dashboard/post` | ✅ Done |
+| AI Thread Creator | `/dashboard/thread` | ✅ Done |
 | Trending Topics | `/dashboard/trends` | ✅ Done |
 | AI Post Generator | `/dashboard/generate` | ✅ Done |
 
@@ -77,6 +78,10 @@
 - [ ] Auto-post based on trending topics (cron job)
 - [ ] Bulk post queue management
 - [ ] Best time to post analytics
+- [ ] Schedule thread posting
+- [ ] Draft & save thread
+- [ ] Thread analytics (impressions per tweet)
+- [ ] Thread template library
 
 ### Phase 3 — Analytics & Insights
 - [ ] Tweet performance dashboard (impressions, likes, reposts, replies)
