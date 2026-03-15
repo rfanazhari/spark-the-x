@@ -4,7 +4,7 @@ import { getTwitterClient } from '@/lib/twitter'
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser()
@@ -12,7 +12,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const id = params.id
+    const { id } = await params
     if (!id || typeof id !== 'string') {
       return NextResponse.json(
         { success: false, error: 'Tweet id is required.' },
