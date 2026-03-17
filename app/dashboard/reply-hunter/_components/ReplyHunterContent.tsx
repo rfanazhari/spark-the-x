@@ -321,9 +321,8 @@ export function ReplyHunterContent() {
   }, [keywords])
 
   useEffect(() => {
-    fetchThreads(DEFAULT_KEYWORDS)
     fetchHistory()
-  }, [])
+  }, [fetchHistory])
 
   const hasThreads = threads.length > 0
 
