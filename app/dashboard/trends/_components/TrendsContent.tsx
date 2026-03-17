@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 
 interface Trend {
   name: string
-  tweetVolume: number
+  tweetVolume: number | null
   url: string
 }
 
@@ -45,7 +45,13 @@ function TrendCard({ trend, onUse }: { trend: Trend; onUse: (t: Trend) => void }
         </a>
       </div>
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{fmtVolume(trend.tweetVolume)}</span> tweets
+        {trend.tweetVolume && trend.tweetVolume > 0 ? (
+          <>
+            <span className="font-medium text-foreground">{fmtVolume(trend.tweetVolume)}</span> tweets
+          </>
+        ) : (
+          <span className="font-medium text-foreground">Trending</span>
+        )}
       </p>
       <Button
         variant="outline"
@@ -92,7 +98,7 @@ export function TrendsContent() {
   function handleUseTrend(trend: Trend) {
     const params = new URLSearchParams({
       trend: trend.name,
-      volume: String(trend.tweetVolume),
+      volume: String(trend.tweetVolume ?? 0),
     })
     router.push(`/dashboard/generate?${params.toString()}`)
   }

@@ -8,7 +8,9 @@ import {
   Clock,
   ExternalLink,
   FileText,
+  Globe,
   Loader2,
+  MapPin,
   RefreshCw,
   XCircle,
 } from 'lucide-react'
@@ -33,7 +35,7 @@ interface ThreadUsage {
 
 interface TrendItem {
   name: string
-  tweetVolume: number
+  tweetVolume: number | null
   url: string
 }
 
@@ -224,7 +226,7 @@ export function ThreadContent() {
   const [topicMode, setTopicMode] = useState<'manual' | 'trend'>('manual')
   const [selectedModel, setSelectedModel] = useState<AIModel>('claude')
   const [fromTrend, setFromTrend] = useState(false)
-  const [tweetVolume, setTweetVolume] = useState<number | undefined>(undefined)
+  const [tweetVolume, setTweetVolume] = useState<number | null | undefined>(undefined)
   const [isGenerating, setIsGenerating] = useState(false)
   const [threadId, setThreadId] = useState<string | null>(null)
   const [generatedTweets, setGeneratedTweets] = useState<GeneratedTweet[]>([])
@@ -236,6 +238,10 @@ export function ThreadContent() {
   const [trends, setTrends] = useState<TrendItem[]>([])
   const [isTrendsLoading, setIsTrendsLoading] = useState(false)
   const [trendError, setTrendError] = useState<string | null>(null)
+  const [trendsLocation, setTrendsLocation] = useState<'worldwide' | 'indonesia'>(
+    'worldwide'
+  )
+  const [trendsRefreshKey, setTrendsRefreshKey] = useState(0)
   const [toasts, setToasts] = useState<ToastData[]>([])
   const [historyPage, setHistoryPage] = useState(1)
   const [historyData, setHistoryData] = useState<{ data: Thread[]; meta: PaginationMeta } | null>(
@@ -278,27 +284,6 @@ export function ThreadContent() {
     }
   }, [addToast])
 
-  const loadTrends = useCallback(async () => {
-    setIsTrendsLoading(true)
-    setTrendError(null)
-    try {
-      const res = await fetch('/api/twitter/trends')
-      const data = (await res.json()) as
-        | { success: true; data: TrendItem[] }
-        | { success: false; error?: string }
-
-      if ('success' in data && data.success) {
-        setTrends(data.data)
-      } else {
-        setTrendError(data.error ?? 'Failed to load trends.')
-      }
-    } catch {
-      setTrendError('Network error while loading trends.')
-    } finally {
-      setIsTrendsLoading(false)
-    }
-  }, [])
-
   const loadHistory = useCallback(
     async (page: number) => {
       setHistoryLoading(true)
@@ -333,10 +318,41 @@ export function ThreadContent() {
   }, [loadUsage])
 
   useEffect(() => {
-    if (topicMode === 'trend' && trends.length === 0 && !isTrendsLoading) {
-      loadTrends()
+    if (topicMode !== 'trend') return
+    let cancelled = false
+    setIsTrendsLoading(true)
+    setTrendError(null)
+    fetch(`/api/twitter/trends?location=${trendsLocation}`)
+      .then((res) => res.json())
+      .then(
+        (
+          data:
+            | { success: true; data: TrendItem[] }
+            | { success: false; error?: string }
+        ) => {
+          if (cancelled) return
+          if ('success' in data && data.success) {
+            setTrends(data.data)
+          } else {
+            setTrendError(data.error ?? 'Failed to load trends.')
+          }
+        }
+      )
+      .catch(() => {
+        if (!cancelled) {
+          setTrendError('Network error while loading trends.')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsTrendsLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
     }
-  }, [topicMode, trends.length, isTrendsLoading, loadTrends])
+  }, [topicMode, trendsLocation, trendsRefreshKey])
 
   useEffect(() => {
     loadHistory(historyPage)
@@ -557,7 +573,7 @@ export function ThreadContent() {
                   }}
                   placeholder="e.g. How AI changes software jobs"
                 />
-                {fromTrend && tweetVolume && (
+                {fromTrend && tweetVolume && tweetVolume > 0 && (
                   <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/30 font-medium">
                     {tweetVolume.toLocaleString()} tweets
                   </span>
@@ -573,7 +589,7 @@ export function ThreadContent() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={loadTrends}
+                    onClick={() => setTrendsRefreshKey((key) => key + 1)}
                     disabled={isTrendsLoading}
                     className="h-8 px-2"
                   >
@@ -581,13 +597,37 @@ export function ThreadContent() {
                   </Button>
                 </div>
 
+                <div className="flex flex-wrap items-center rounded-lg border border-border bg-muted/30 p-1 gap-1 w-full sm:w-fit">
+                  <button
+                    onClick={() => setTrendsLocation('worldwide')}
+                    className={cn(
+                      'flex flex-1 items-center justify-center h-9 min-h-0 gap-1.5 rounded-md px-3 text-sm font-medium transition-colors',
+                      trendsLocation === 'worldwide'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <Globe size={13} />
+                    Worldwide
+                  </button>
+                  <button
+                    onClick={() => setTrendsLocation('indonesia')}
+                    className={cn(
+                      'flex flex-1 items-center justify-center h-9 min-h-0 gap-1.5 rounded-md px-3 text-sm font-medium transition-colors',
+                      trendsLocation === 'indonesia'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <MapPin size={13} />
+                    Indonesia
+                  </button>
+                </div>
+
                 {isTrendsLoading && (
-                  <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="h-16 min-w-[240px] sm:min-w-0 rounded-xl bg-muted/30 animate-pulse"
-                      />
+                  <div className="grid grid-cols-2 gap-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="h-16 rounded-xl bg-muted/30 animate-pulse" />
                     ))}
                   </div>
                 )}
@@ -597,8 +637,8 @@ export function ThreadContent() {
                 )}
 
                 {!isTrendsLoading && !trendError && (
-                  <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible">
-                    {trends.slice(0, 5).map((trend) => (
+                  <div className="grid grid-cols-2 gap-3">
+                    {trends.map((trend) => (
                       <button
                         key={trend.name}
                         type="button"
@@ -608,14 +648,15 @@ export function ThreadContent() {
                           setTweetVolume(trend.tweetVolume)
                         }}
                         className={cn(
-                          'min-w-[240px] shrink-0 sm:min-w-0',
                           'flex items-center justify-between rounded-xl border px-4 py-3 text-left transition',
                           'border-border bg-background/60 hover:border-primary/60 hover:bg-primary/10'
                         )}
                       >
                         <div className="text-sm font-medium text-foreground">{trend.name}</div>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          {trend.tweetVolume.toLocaleString()}
+                          {trend.tweetVolume && trend.tweetVolume > 0
+                            ? `${trend.tweetVolume.toLocaleString()} tweets`
+                            : 'Trending'}
                         </span>
                       </button>
                     ))}
