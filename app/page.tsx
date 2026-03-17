@@ -1,5 +1,13 @@
 import Link from 'next/link'
-import { Zap, Sparkles, TrendingUp, BarChart2, ArrowRight, AlignLeft } from 'lucide-react'
+import {
+  Zap,
+  Sparkles,
+  TrendingUp,
+  BarChart2,
+  ArrowRight,
+  AlignLeft,
+  MessageSquarePlus,
+} from 'lucide-react'
 
 const features = [
   {
@@ -25,6 +33,12 @@ const features = [
     description:
       'Publish directly from the dashboard. Track impressions, likes, replies, and retweets in one place.',
     icon: BarChart2,
+  },
+  {
+    title: 'Reply Hunter',
+    description:
+      "Find trending threads in your niche and reply with AI - turn other people's viral posts into your own impressions.",
+    icon: MessageSquarePlus,
   },
 ]
 
@@ -268,6 +282,110 @@ export default function Home() {
                       </span>
                       AI tool mana yang udah kamu coba? Drop di reply! #AI #StartupIndonesia
                       #BuildInPublic
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="app-container py-16 md:py-20">
+          <div className="rounded-3xl border border-white/10 bg-[#0f0f0f] p-6 md:p-10">
+            <div className="flex flex-col gap-3">
+              <span className="inline-flex w-fit items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">
+                REPLY HUNTER EXAMPLE
+              </span>
+              <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+                From trending thread to reply in seconds
+              </h2>
+              <p className="text-sm text-white/70 sm:text-base">
+                Spot what&apos;s hot, pick your tone, and let AI craft the perfect reply - you just
+                hit post.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                      TRENDING THREAD
+                    </p>
+                    <div className="mt-2 rounded-2xl border border-white/10 bg-black/40 px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold text-white/90">
+                          @techfounder_id{' '}
+                          <span className="font-normal text-white/60">· 12.4K followers</span>
+                        </p>
+                        <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-orange-200">
+                          🔥 Hot
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm text-white/80">
+                        &quot;Hot take: Most Indonesian devs are building for the wrong market. The
+                        real opportunity isn&apos;t copying Silicon Valley - it&apos;s solving problems
+                        only we understand.&quot;
+                      </p>
+                      <p className="mt-3 text-xs text-white/60">❤ 847 &nbsp;&nbsp;💬 203 &nbsp;&nbsp;🔄 156</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                      TONE
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <span className="rounded-full border border-indigo-400/40 bg-indigo-500/10 px-4 py-2 text-xs font-semibold text-indigo-200">
+                        Educational
+                      </span>
+                      <span className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/60">
+                        Bold
+                      </span>
+                      <span className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/60">
+                        Curious
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600/40 text-xs font-semibold text-indigo-100">
+                        rf
+                      </div>
+                      <div className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white/80">
+                        Setuju. Gojek &amp; Tokopedia lahir dari insight lokal yang orang luar gak
+                        punya. Local context = unfair advantage yang susah di-replicate. 🇮🇩
+                      </div>
+                    </div>
+                    <div className="ml-4 h-6 w-px bg-white/10" />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600/40 text-xs font-semibold text-indigo-100">
+                        rf
+                      </div>
+                      <div className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white/80">
+                        Exactly this. The best moat for Indonesian devs isn&apos;t tech stack - it&apos;s
+                        understanding the warung economy, the unbanked, the bahasa nuance. Build
+                        for that.
+                      </div>
+                    </div>
+                    <div className="ml-4 h-6 w-px bg-white/10" />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600/40 text-xs font-semibold text-indigo-100">
+                      rf
+                    </div>
+                    <div className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white/80">
+                      This is why &quot;just copy Uber for X&quot; rarely works here. The real alpha is
+                      in problems only someone who grew up in Indonesia would even notice. 👀
                     </div>
                   </div>
                 </div>

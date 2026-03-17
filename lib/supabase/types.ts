@@ -61,3 +61,41 @@ export interface ThreadUsage {
   created_at: string
   updated_at: string
 }
+
+export interface ReplyHistory {
+  id: string
+  user_id: string
+  original_tweet_id: string
+  original_tweet_text: string | null
+  original_author_handle: string | null
+  reply_tweet_id: string
+  reply_text: string
+  tone_label: 'educational' | 'bold' | 'curious' | null
+  impressions: number | null
+  engagements: number | null
+  created_at: string
+  metrics_synced_at: string | null
+}
+
+export interface ReplyHistoryInsert {
+  user_id: string
+  original_tweet_id: string
+  original_tweet_text?: string | null
+  original_author_handle?: string | null
+  reply_tweet_id: string
+  reply_text: string
+  tone_label?: 'educational' | 'bold' | 'curious' | null
+  impressions?: number | null
+  engagements?: number | null
+  metrics_synced_at?: string | null
+}
+
+export interface ReplyHistoryUpdate {
+  original_tweet_text?: string | null
+  original_author_handle?: string | null
+  reply_text?: string
+  tone_label?: 'educational' | 'bold' | 'curious' | null
+  impressions?: number | null
+  engagements?: number | null
+  metrics_synced_at?: string | null
+}

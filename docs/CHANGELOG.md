@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-03-17
+
+### Added
+- Reply Hunter discover: in-memory cache (TTL 15 min) per user+keywords
+- Reply Hunter discover: daily request limit (5/day per user) with reset at midnight
+- Response includes `requestsUsed` and `requestsRemaining` fields
+
+## 2026-03-17
+
+### Added
+- Reply Hunter Phase 1C — UI Layer
+- `app/dashboard/reply-hunter/page.tsx` — main page wrapper
+- `app/dashboard/reply-hunter/_components/ReplyHunterContent.tsx` — orchestrator with useReplyHunter hook
+- `app/dashboard/reply-hunter/_components/ThreadCard.tsx` — thread card with badge, engagement stats, CTA
+- `app/dashboard/reply-hunter/_components/ReplyModal.tsx` — modal with tone selector, 3 reply options, inline edit, char counter, posting lock
+- `app/dashboard/reply-hunter/_components/AnalyticsPanel.tsx` — reply history with metrics
+
+### Modified
+- `components/sidebar.tsx` — added Reply Hunter entry below Trends
+
+## 2026-03-17
+
+### Added
+- Reply Hunter Phase 1B — Core API
+- `app/api/reply-hunter/discover/route.ts` — search trending threads via X API with engagement scoring and badge logic
+- `app/api/reply-hunter/generate/route.ts` — AI reply generator with Claude → GPT-4o Mini fallback, tone support, 280 char validation
+- `app/api/reply-hunter/post/route.ts` — post reply to X with rate limit (10/hr), duplicate check (24hr window), partial failure handling
+- `app/api/reply-hunter/history/route.ts` — paginated reply history with metrics
+
+## March 17, 2026
+
+### Added
+- New feature: Reply Hunter (Phase 1A — Foundation)
+- `migrations/reply_hunter_001.sql` — tabel `reply_history` dengan RLS, indexes, dan duplicate constraint
+- `app/dashboard/reply-hunter/types.ts` — shared request/response types untuk fitur Reply Hunter
+
+### Modified
+- `lib/supabase/types.ts` — tambah types `ReplyHistory`, `ReplyHistoryInsert`, `ReplyHistoryUpdate`
+
 ## [Posts Page Fixes] — March 15, 2026
 
 ### Fixed

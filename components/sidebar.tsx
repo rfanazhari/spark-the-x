@@ -9,6 +9,7 @@ import {
   AlignLeft,
   FileText,
   TrendingUp,
+  MessageSquarePlus,
   Sparkles,
   Menu,
   X,
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/dashboard/thread', label: 'Thread', icon: AlignLeft },
   { href: '/dashboard/posts', label: 'Posts', icon: FileText },
   { href: '/dashboard/trends', label: 'Trends', icon: TrendingUp },
+  { href: '/dashboard/reply-hunter', label: 'Reply Hunter', icon: MessageSquarePlus },
   { href: '/dashboard/generate', label: 'Generate', icon: Sparkles },
 ]
 
