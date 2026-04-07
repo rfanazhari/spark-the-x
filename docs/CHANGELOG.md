@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-04-07
+
+### Changed
+- Updated single tweet generator (`app/api/ai/generate/route.ts`) with stricter ghostwriter rules:
+  - no emoji, no exclamation marks, no generic engagement bait, no motivational closings
+  - no hashtags unless explicitly requested
+  - language auto-detection from input brief (Indonesian or English only, no mixing)
+  - normalization pass to sanitize model output before returning
+- Updated thread generator (`app/api/ai/thread/route.ts`) to match new writing constraints:
+  - output limited to 3-5 tweets, no numbering format
+  - each tweet is short/blunt with one clear idea and max 280 chars
+  - final tweet forced to end as a statement (not a question)
+  - language lock + hashtag gating + output sanitization
+- Documentation synced with new writing style guardrails:
+  - `AGENTS.md` (Agent 2/5 prompt rules)
+  - `docs/IDENTITY.md` (AI generation context and style guide)
+
 ## 2026-03-17
 
 ### Added

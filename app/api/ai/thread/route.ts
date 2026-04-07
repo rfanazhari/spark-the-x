@@ -3,21 +3,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getAuthUser } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-const SYSTEM_PROMPT = `You are a tweet ghostwriter for @rfanazhari, a tech educator and builder from Indonesia.
-
-IDENTITY:
-- Niche: Tech, AI, Programming, Technology for better life
-- Audience: Young entrepreneurs (18-25), startup founders, working professionals in Indonesia
-- Tone: Educational, informative, relatable — like a knowledgeable friend, not a lecturer
-- Language: Mix of Bahasa Indonesia and English naturally
-- Goal: Build authority as Indonesia's go-to tech educator
-
-RULES:
-- Max 280 characters per tweet (count carefully)
-- Never sound like a corporate brand
-- Sound like a real human, not a bot
-- Mix Bahasa Indonesia + English naturally`
-
 interface TweetItem {
   index: number
   text: string
@@ -26,6 +11,7 @@ interface TweetItem {
 }
 
 type ThreadModel = 'claude' | 'openai'
+type OutputLanguage = 'Indonesian' | 'English'
 
 interface ThreadRequestBody {
   topic: string
@@ -38,24 +24,145 @@ interface OpenAIResponse {
   choices: { message: { content: string } }[]
 }
 
-function buildThreadPrompt(topic: string, tweetVolume?: number, fromTrend?: boolean): string {
+const INDONESIAN_MARKERS = [
+  'yang',
+  'dan',
+  'untuk',
+  'dengan',
+  'karena',
+  'tidak',
+  'bukan',
+  'adalah',
+  'sekarang',
+  'lebih',
+]
+
+const ENGLISH_MARKERS = [
+  'the',
+  'and',
+  'with',
+  'without',
+  'because',
+  'founder',
+  'builders',
+  'startup',
+  'market',
+  'people',
+]
+
+const ENGAGEMENT_BAIT_PATTERNS = [
+  /who else feels this\??/gi,
+  /what do you think\??/gi,
+]
+
+const MOTIVATIONAL_PATTERNS = [
+  /embrace the chaos/gi,
+  /keep going/gi,
+]
+
+function detectLanguage(input: string): OutputLanguage {
+  const text = ` ${input.toLowerCase()} `
+  const idScore = INDONESIAN_MARKERS.reduce(
+    (score, word) => (text.includes(` ${word} `) ? score + 1 : score),
+    0
+  )
+  const enScore = ENGLISH_MARKERS.reduce(
+    (score, word) => (text.includes(` ${word} `) ? score + 1 : score),
+    0
+  )
+
+  if (idScore > enScore) return 'Indonesian'
+  return 'English'
+}
+
+function isHashtagExplicitlyRequested(input: string): boolean {
+  return /\b(hashtag|hashtags|tagar)\b/i.test(input)
+}
+
+function sanitizeThreadText(text: string, allowHashtags: boolean): string {
+  let sanitized = text.trim()
+  sanitized = sanitized.replace(/^(?:\(\d+\)|\[\d+\]|\d+\/\d+|\d+[).:-])\s*/g, '')
+  sanitized = sanitized.replace(/[\u2013\u2014]/g, '-')
+  sanitized = sanitized.replace(/[!]+/g, '')
+  sanitized = sanitized.replace(/\p{Extended_Pictographic}/gu, '')
+
+  ENGAGEMENT_BAIT_PATTERNS.forEach((pattern) => {
+    sanitized = sanitized.replace(pattern, '')
+  })
+  MOTIVATIONAL_PATTERNS.forEach((pattern) => {
+    sanitized = sanitized.replace(pattern, '')
+  })
+
+  if (!allowHashtags) {
+    sanitized = sanitized.replace(/(^|\s)#[\p{L}\p{N}_]+/gu, '$1')
+  }
+
+  sanitized = sanitized.replace(/\s{2,}/g, ' ').trim()
+  sanitized = sanitized.replace(/\?+\s*$/g, '').trim()
+
+  if (sanitized.length > 280) {
+    sanitized = sanitized.slice(0, 280).trim()
+    sanitized = sanitized.replace(/\?+\s*$/g, '').trim()
+  }
+
+  return sanitized
+}
+
+function buildSystemPrompt(language: OutputLanguage, allowHashtags: boolean): string {
+  const languageRule =
+    language === 'Indonesian'
+      ? 'Write fully in Indonesian. Do not mix with English.'
+      : 'Write fully in English. Do not mix with Indonesian.'
+
+  const hashtagRule = allowHashtags
+    ? 'Hashtags are allowed only because they were explicitly requested. Keep them minimal.'
+    : 'Do not use hashtags.'
+
+  return `You are a social media ghostwriter for a tech/AI founder on X.
+
+VOICE:
+- Gen Z, lowercase, dry, confident
+- Opinionated but not arrogant
+- Sounds like a founder who has seen real product cycles
+
+HARD RULES:
+- No emojis
+- No exclamation marks
+- No motivational closings
+- No generic engagement bait
+- Avoid em dashes
+- Keep it short and blunt
+- One idea per tweet
+- Hook must challenge or provoke with no preamble
+- End with a statement that invites debate, never a question
+- ${languageRule}
+- ${hashtagRule}`
+}
+
+function buildThreadPrompt(
+  topic: string,
+  language: OutputLanguage,
+  allowHashtags: boolean,
+  tweetVolume?: number,
+  fromTrend?: boolean
+): string {
   const trendNote = fromTrend && tweetVolume
     ? `This topic is currently trending with ${tweetVolume.toLocaleString()} tweets.`
     : ''
 
   return `Create a Twitter thread about: "${topic}"
 ${trendNote}
+Language: ${language}
 
 FORMAT RULES:
-- Tweet 1 (hook): strong opening that hooks readers, NO numbering, ALWAYS end with 🧵 emoji
-- Tweet 2..N-1 (body): each tweet = one clear point, start with "(X)" where X is the tweet number
-  example: "(2) " for the second body tweet
-- No total count in numbering — just the index
-- Tweet N (cta): engaging call-to-action + 1-3 relevant hashtags, NO numbering
-- Every tweet MUST be max 280 characters — count carefully including numbering and 🧵
-- Determine tweet count based on content depth (min 3, max 15)
-- Language: mix Bahasa Indonesia + English naturally
-- Tone: educational, relatable, like a knowledgeable friend
+- Return 3 to 5 tweets only
+- No numbering format like 1/, 2/, (1), or "tweet 1"
+- Each tweet should stand on its own and carry one sharp point
+- Tweet 1 type must be "hook"
+- Tweet 2..N-1 type must be "body"
+- Last tweet type must be "cta"
+- Every tweet MUST be max 280 characters
+- ${allowHashtags ? 'Hashtags allowed only if needed, max 3 total in the full thread.' : 'Do not use hashtags.'}
 
 Respond ONLY in valid JSON, no markdown, no explanation:
 {
@@ -68,29 +175,42 @@ Respond ONLY in valid JSON, no markdown, no explanation:
 }`
 }
 
-function recalculateNumbering(tweets: TweetItem[]): TweetItem[] {
-  return tweets.map((tweet, i) => {
-    if (tweet.type !== 'body') {
-      return { ...tweet, charCount: tweet.text.length }
+function parseThreadResponse(raw: string, allowHashtags: boolean): TweetItem[] {
+  const stripped = raw.trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+  const parsed = JSON.parse(stripped) as { tweets?: Array<Partial<TweetItem>> }
+
+  if (!parsed.tweets || !Array.isArray(parsed.tweets)) {
+    throw new Error('AI response must include a tweets array')
+  }
+
+  if (parsed.tweets.length < 3) {
+    throw new Error('Thread must contain at least 3 tweets')
+  }
+
+  const limitedTweets = parsed.tweets.slice(0, 5)
+
+  return limitedTweets.map((tweet, i) => {
+    const text = sanitizeThreadText(typeof tweet.text === 'string' ? tweet.text : '', allowHashtags)
+    if (!text) {
+      throw new Error(`Tweet ${i + 1} is empty after normalization`)
     }
 
-    const cleanText = tweet.text
-      .replace(/^\(\d+\)\s*/, '')
-      .replace(/\s*\(\d+\/\d+\)\s*$/, '')
-      .trim()
-    const numbered = `(${i + 1}) ${cleanText}`
-    const useNumbered = numbered.length <= 280
+    const type: TweetItem['type'] =
+      i === 0 ? 'hook' : i === limitedTweets.length - 1 ? 'cta' : 'body'
 
     return {
-      ...tweet,
-      text: useNumbered ? numbered : cleanText,
-      charCount: useNumbered ? numbered.length : cleanText.length,
+      index: i,
+      text,
+      type,
+      charCount: text.length,
     }
   })
 }
 
 async function generateWithClaude(
   topic: string,
+  language: OutputLanguage,
+  allowHashtags: boolean,
   tweetVolume?: number,
   fromTrend?: boolean
 ): Promise<TweetItem[]> {
@@ -98,20 +218,24 @@ async function generateWithClaude(
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildThreadPrompt(topic, tweetVolume, fromTrend) }],
+    system: buildSystemPrompt(language, allowHashtags),
+    messages: [
+      {
+        role: 'user',
+        content: buildThreadPrompt(topic, language, allowHashtags, tweetVolume, fromTrend),
+      },
+    ],
   })
 
   const content = message.content[0]
   if (content.type !== 'text') throw new Error('Unexpected response type from Claude')
-
-  const stripped = content.text.trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-  const parsed = JSON.parse(stripped) as { tweets: TweetItem[] }
-  return parsed.tweets
+  return parseThreadResponse(content.text, allowHashtags)
 }
 
 async function generateWithOpenAI(
   topic: string,
+  language: OutputLanguage,
+  allowHashtags: boolean,
   tweetVolume?: number,
   fromTrend?: boolean
 ): Promise<TweetItem[]> {
@@ -124,8 +248,11 @@ async function generateWithOpenAI(
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: buildThreadPrompt(topic, tweetVolume, fromTrend) },
+        { role: 'system', content: buildSystemPrompt(language, allowHashtags) },
+        {
+          role: 'user',
+          content: buildThreadPrompt(topic, language, allowHashtags, tweetVolume, fromTrend),
+        },
       ],
       max_tokens: 2048,
       temperature: 0.8,
@@ -138,9 +265,7 @@ async function generateWithOpenAI(
   }
 
   const data = (await res.json()) as OpenAIResponse
-  const stripped = data.choices[0].message.content.trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-  const parsed = JSON.parse(stripped) as { tweets: TweetItem[] }
-  return parsed.tweets
+  return parseThreadResponse(data.choices[0].message.content, allowHashtags)
 }
 
 export async function POST(request: NextRequest) {
@@ -183,14 +308,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const language = detectLanguage(topic)
+    const allowHashtags = isHashtagExplicitlyRequested(topic)
+
     let rawTweets: TweetItem[]
     if (model === 'claude') {
-      rawTweets = await generateWithClaude(topic, tweetVolume, fromTrend)
+      rawTweets = await generateWithClaude(topic, language, allowHashtags, tweetVolume, fromTrend)
     } else {
-      rawTweets = await generateWithOpenAI(topic, tweetVolume, fromTrend)
+      rawTweets = await generateWithOpenAI(topic, language, allowHashtags, tweetVolume, fromTrend)
     }
 
-    const tweets = recalculateNumbering(rawTweets)
+    const tweets = rawTweets
 
     const invalid = tweets.filter((t) => t.text.length > 280)
     if (invalid.length > 0) {

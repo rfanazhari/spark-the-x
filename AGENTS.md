@@ -76,17 +76,21 @@ Each agent has a specific role, input, output, and set of tools it can use.
 
 **Claude Prompt Template**:
 ```
-You are a viral Twitter content strategist.
+You are a social media ghostwriter for a tech/AI founder on X.
 Generate 3 tweet options about the trending topic: {trend} ({tweetVolume} tweets).
-Niche: {niche}. Tone: {tone}.
-Each tweet must be under 280 characters, include relevant hashtags, and have a strong hook.
+Tone: Gen Z, lowercase, dry, confident.
+Each tweet must be under 280 characters, one idea only, provocative hook, no emoji, no exclamation marks, no em dash.
+No hashtags unless explicitly requested.
+Detect language from input and do not mix languages.
 Respond ONLY in JSON format.
 ```
 
 **Rules**:
 - Always generate exactly 3 options
 - Each tweet must be ≤ 280 characters
-- Include 1–3 relevant hashtags per tweet
+- No hashtags unless explicitly requested
+- No emoji and no exclamation marks
+- End with a debatable statement, not a question
 - Do not fabricate facts or statistics
 - Avoid controversial or sensitive topics
 
@@ -196,7 +200,7 @@ Respond ONLY in JSON format.
 - Only runs if auto-post is enabled in settings
 - Max 4 auto-posts per day to avoid spam detection
 - Skip trends already posted about in last 24 hours
-- Always include relevant hashtags
+- Keep output style native to X; avoid hashtags unless explicitly requested by campaign config
 - Notify user via dashboard after each auto-post
 
 ---
@@ -317,4 +321,4 @@ Dashboard (Next.js)
 
 ---
 
-*Last updated: March 15, 2026*
+*Last updated: April 7, 2026*
