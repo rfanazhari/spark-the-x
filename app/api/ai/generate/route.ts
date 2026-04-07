@@ -50,6 +50,17 @@ const MOTIVATIONAL_PATTERNS = [
   /keep going/gi,
 ]
 
+const LINKEDIN_PHRASE_PATTERNS = [
+  /\bmove the needle\b/gi,
+  /\binnovate\b/gi,
+  /\bsee how that changes your results\b/gi,
+  /\bleverage\b/gi,
+  /\bthought leadership\b/gi,
+  /\bunlock(?:ing)? potential\b/gi,
+  /\bgame[- ]changer\b/gi,
+  /\bsynergy\b/gi,
+]
+
 function detectLanguage(input: string): OutputLanguage {
   const text = ` ${input.toLowerCase()} `
   const idScore = INDONESIAN_MARKERS.reduce(
@@ -79,6 +90,9 @@ function sanitizeTweetText(text: string, allowHashtags: boolean): string {
     sanitized = sanitized.replace(pattern, '')
   })
   MOTIVATIONAL_PATTERNS.forEach((pattern) => {
+    sanitized = sanitized.replace(pattern, '')
+  })
+  LINKEDIN_PHRASE_PATTERNS.forEach((pattern) => {
     sanitized = sanitized.replace(pattern, '')
   })
 
@@ -143,6 +157,7 @@ HARD RULES:
 - No exclamation marks
 - No motivational closings
 - No generic engagement bait
+- No corporate buzzwords or linkedin-style phrasing
 - Avoid em dashes
 - Keep each tweet short, blunt, and focused on one idea
 - Hook must challenge or provoke with no preamble
@@ -172,6 +187,10 @@ Rules:
 - Adapt tone and format to the specified content pillar
 - No emojis, no exclamation marks, no em dashes
 - No motivational endings, no engagement bait
+- Never use phrases like "move the needle", "innovate", or "see how that changes your results"
+- Avoid linkedin voice and abstract business language
+- Write like a person typing fast on X, not like a polished content deck
+- Don't explain the point; make the point directly
 - One idea per tweet
 - ${allowHashtags ? 'Hashtags are allowed only if useful, max 3.' : 'hashtags must always be an empty array []' }`
 }
